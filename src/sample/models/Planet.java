@@ -12,6 +12,9 @@ public class Planet extends CosmosObject{
         this.forceOfGravity = forceOfGravity;
     }
 
+    public Planet() {
+    }
+
     @Override
     public String getDescription() {
         String isAtmoString = this.isAtmosphere ? "есть" : "отсутствует";

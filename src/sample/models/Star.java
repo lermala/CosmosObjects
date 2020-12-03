@@ -15,6 +15,9 @@ public class Star extends CosmosObject{
         this.temperature = temperature;
     }
 
+    public Star() {
+    }
+
     @Override
     public String getDescription() {
         String typeString = "";

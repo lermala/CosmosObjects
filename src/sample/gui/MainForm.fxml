@@ -9,7 +9,8 @@
         <menus>
           <Menu mnemonicParsing="false" text="Файл">
             <items>
-              <MenuItem mnemonicParsing="false" text="Close" />
+              <MenuItem mnemonicParsing="false" onAction="#onSaveToFileClick" text="Сохранить..." />
+                  <MenuItem mnemonicParsing="false" onAction="#onLoadToFileClick" text="Загрузить..." />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Данные">
@@ -21,7 +22,10 @@
           </Menu>
         </menus>
       </MenuBar>
-      <HBox />
+      <HBox>
+         <children>
+            <ComboBox fx:id="cmbObjectType" prefWidth="150.0" />
+         </children></HBox>
         <TableView fx:id="mainTable" prefHeight="364.0" prefWidth="638.0" VBox.vgrow="ALWAYS" />
     </children>
 </VBox>

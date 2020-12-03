@@ -1,10 +1,18 @@
 package sample.models;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.*;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class CosmosModel {
     private ArrayList<CosmosObject> cosmosObjectsList = new ArrayList<>();
     private int counter = 1; // добавили счетчик
+
+    // поле фильтр, по умолчанию используем базовый класс
+    Class<? extends CosmosObject> cosmosFilter = CosmosObject.class;
 
     // Создаем наш любимый функциональный интерфейс
     // с помощью него мы организуем общение между моделью и контроллером
@@ -33,8 +41,6 @@ public class CosmosModel {
         this.emitDataChanged();
     }
 
-    // добавили параметр emit в метод,
-    // если там true то вызывается оповещение слушателей
     public void add(CosmosObject cosmosObject, boolean emit){
         cosmosObject.id = counter;// присваиваем id еды, значение счетчика
         counter += 1; // увеличиваем счетчик на единицу
@@ -46,10 +52,6 @@ public class CosmosModel {
             this.emitDataChanged();
     }
 
-    // а это получается перегруженный метод, но с одним параметром
-// который вызывает add с двумя параметрами,
-// передавая в качестве второго параметра true
-// то есть вызывая add с одним параметром будет происходит оповещение
     public void add(CosmosObject cosmosObject){
         add(cosmosObject, true);
     }
@@ -81,12 +83,60 @@ public class CosmosModel {
         this.emitDataChanged();
     }
 
+    public void saveToFile(String path){
+        // открываем файл для чтения
+        try (Writer writer =  new FileWriter(path)) {
+            // создаем сериализатор
+            ObjectMapper mapper = new ObjectMapper();
+            // записываем данные списка cosmosObjectsList в файл
+            mapper.writerFor(new TypeReference<ArrayList<CosmosObject>>() { }) // указали какой тип подсовываем
+                    .withDefaultPrettyPrinter() // кстати эта строчка чтобы в файлике все красиво печаталось
+                    .writeValue(writer, cosmosObjectsList); // а это непосредственно запись
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadFromFile(String path) {
+        try (Reader reader =  new FileReader(path)) {
+            // создаем сериализатор
+            ObjectMapper mapper = new ObjectMapper();
+
+            // читаем из файла
+            cosmosObjectsList = mapper.readerFor(new TypeReference<ArrayList<CosmosObject>>() { })
+                    .readValue(reader);
+
+            // рассчитываем счетчик как максимальное значение id плюс 1
+            this.counter = cosmosObjectsList.stream()
+                    .map(cosmosObject -> cosmosObject.id)
+                    .max(Integer::compareTo)
+                    .orElse(0) + 1;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // оповещаем что данные загрузились
+        this.emitDataChanged();
+    }
+
+    public void setCosmosFilter(Class<? extends CosmosObject> cosmosObject) {
+        this.cosmosFilter = cosmosObject;
+
+        this.emitDataChanged();
+    }
+
     /**
      * оповестили всех слушателей что данные изменились
      */
     private void emitDataChanged() {
-        for (DataChangedListener listener: dataChangedListeners) {
-            listener.dataChanged(cosmosObjectsList);
+        for (DataChangedListener listener : dataChangedListeners) {
+            ArrayList<CosmosObject> filteredList = new ArrayList<>(
+                    cosmosObjectsList.stream() // запускаем стрим
+                            .filter(object -> cosmosFilter.isInstance(object)) // фильтруем по типу
+                            .collect(Collectors.toList()) // превращаем в список
+            );
+            listener.dataChanged(filteredList); // подсовывам сюда список
         }
     }
 }

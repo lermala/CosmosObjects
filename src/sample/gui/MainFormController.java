@@ -8,15 +8,15 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import sample.models.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
@@ -24,6 +24,14 @@ import java.util.ResourceBundle;
 
 public class MainFormController implements Initializable {
     public TableView mainTable;
+    public ComboBox cmbObjectType;
+
+    ObservableList<Class<? extends CosmosObject>> objectTypes = FXCollections.observableArrayList(
+            CosmosObject.class,
+            Planet.class,
+            Comet.class,
+            Star.class
+    );
 
     // создали экземпляр класса модели
     CosmosModel cosmosModel = new CosmosModel();
@@ -33,11 +41,6 @@ public class MainFormController implements Initializable {
         cosmosModel.addDataChangedListener(objects -> {
             mainTable.setItems(FXCollections.observableArrayList(objects));
         });
-
-        cosmosModel.load(); // добавляем вызов метода загрузить данные
-
-        // подключили к табл
-        //mainTable.setItems(cosmosObjectsList);
 
         // создаем столбец, указываем что столбец преобразует CosmosObject в String,
         // указываем заголовок колонки как "Название"
@@ -54,6 +57,37 @@ public class MainFormController implements Initializable {
         // подцепляем столбцы к таблице
         mainTable.getColumns().addAll(distanceFromTheGroundColumn, descriptionColumn);
 
+        // привязали список
+        cmbObjectType.setItems(objectTypes);
+        // выбрали первый элемент в списке
+        cmbObjectType.getSelectionModel().select(0);
+
+        // переопределил метод преобразования имени класса в текст
+        cmbObjectType.setConverter(new StringConverter<Class>() {
+            @Override
+            public String toString(Class object) {
+                // просто перебираем тут все возможные варианты
+                if (CosmosObject.class.equals(object)) {
+                    return "Все";
+                } else if (Planet.class.equals(object)) {
+                    return "Планета";
+                } else if (Star.class.equals(object)) {
+                    return "Звезда";
+                } else if (Comet.class.equals(object)) {
+                    return "Комета";
+                }
+                return null;
+            }
+
+            @Override
+            public Class fromString(String string) {
+                return null;
+            }
+        });
+
+        cmbObjectType.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            this.cosmosModel.setCosmosFilter((Class<? extends CosmosObject>) newValue);
+        });
     }
 
     public void onAddClick(ActionEvent actionEvent) throws IOException {
@@ -128,6 +162,33 @@ public class MainFormController implements Initializable {
         Optional<ButtonType> option = alert.showAndWait();
         if (option.get() == ButtonType.OK) {
             cosmosModel.delete(object.id); // тут вызываем метод модели, и передаем идентификатор
+        }
+    }
+
+    public void onSaveToFileClick(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить данные");
+        fileChooser.setInitialDirectory(new File("."));
+
+
+        // тут вызываем диалог для сохранения файла
+        File file = fileChooser.showSaveDialog(mainTable.getScene().getWindow());
+
+        if (file != null) {
+            cosmosModel.saveToFile(file.getPath());
+        }
+    }
+
+    public void onLoadToFileClick(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Загрузить данные");
+        fileChooser.setInitialDirectory(new File("."));
+
+        // а тут диалог для открытия файла
+        File file = fileChooser.showOpenDialog(mainTable.getScene().getWindow());
+
+        if (file != null) {
+            cosmosModel.loadFromFile(file.getPath());
         }
     }
 }

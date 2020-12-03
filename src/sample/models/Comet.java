@@ -23,4 +23,7 @@ public class Comet extends CosmosObject{
     public String getName() {
         return name;
     }
+
+    public Comet() {
+    }
 }
