@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="382.0" prefWidth="657.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.gui.MainFormController">
+    <children>
+      <MenuBar>
+        <menus>
+          <Menu mnemonicParsing="false" text="Файл">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Данные">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#onAddClick" text="Добавить" />
+                  <MenuItem mnemonicParsing="false" onAction="#onEditClick" text="Редактировать" />
+                  <MenuItem mnemonicParsing="false" onAction="#onDeleteClick" text="Удалить" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <HBox />
+        <TableView fx:id="mainTable" prefHeight="364.0" prefWidth="638.0" VBox.vgrow="ALWAYS" />
+    </children>
+</VBox>
