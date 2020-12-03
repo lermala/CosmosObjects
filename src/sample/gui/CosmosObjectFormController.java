@@ -10,15 +10,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import sample.models.Comet;
-import sample.models.CosmosObject;
-import sample.models.Planet;
-import sample.models.Star;
+import sample.models.*;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class CosmosObjectFormController implements Initializable {
+    public CosmosModel cosmosModel;
+    private Integer id = null; // добавили поле под идентификатор
 
     public ChoiceBox cmbCosmosObjType;
     public TextField txtDistance;
@@ -40,9 +39,6 @@ public class CosmosObjectFormController implements Initializable {
     final String COSMOS_PLANET = "Планета";
     final String COSMOS_COMET = "Комета";
     final String COSMOS_STAR = "Звезда";
-
-    // добавляем новое поле
-    private Boolean modalResult = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -112,21 +108,28 @@ public class CosmosObjectFormController implements Initializable {
 
     // обработчик нажатия на кнопку Сохранить
     public void onSaveClick(ActionEvent actionEvent) {
-        this.modalResult = true; // ставим результат модального окна на true
+        // проверяем передали ли идентификатор
+        if (this.id != null) {
+            // если передавали значит у нас редактирование
+            // собираем объект с формы
+            CosmosObject cosmosObject = getCosmosObject();
+            // подвязываем переданный идентификатор к собранному с формы объекту
+            cosmosObject.id = this.id;
+            // отправляем в модель на изменение
+            this.cosmosModel.edit(cosmosObject);
+        } else {
+            // ну а если у нас добавление, просто добавляем объект
+            this.cosmosModel.add(getCosmosObject());
+        }
+
         // закрываем окно к которому привязана кнопка
         ((Stage)((Node)actionEvent.getSource()).getScene().getWindow()).close();
     }
 
     // обработчик нажатия на кнопку Отменить
     public void onCancelClick(ActionEvent actionEvent) {
-        this.modalResult = false; // ставим результат модального окна на false
         // закрываем окно к которому привязана кнопка
         ((Stage)((Node)actionEvent.getSource()).getScene().getWindow()).close();
-    }
-
-    // геттер для результата модального окна
-    public Boolean getModalResult() {
-        return modalResult;
     }
 
     public CosmosObject getCosmosObject(){
@@ -158,6 +161,12 @@ public class CosmosObjectFormController implements Initializable {
     public void setCosmosObject(CosmosObject cosmosObject){
         // делаем так что если объект редактируется, то нельзя переключать тип
         this.cmbCosmosObjType.setDisable(cosmosObject != null);
+
+        // присвоим значение идентификатора,
+        // если передали еду то есть food != null, то используем food.id
+        // иначе запихиваем в this.id значение null
+        this.id = cosmosObject != null ? cosmosObject.id : null;
+
         if (cosmosObject != null){
             // ну а тут стандартное заполнение полей в соответствии с переданным объектом
             this.txtDistance.setText(String.valueOf(cosmosObject.getDistanceFromTheGround()));

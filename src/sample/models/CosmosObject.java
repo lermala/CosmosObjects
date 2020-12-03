@@ -1,7 +1,7 @@
 package sample.models;
 
 public class CosmosObject {
-
+    public Integer id = null;// идентификатор, по умолчанию равен null
     private double distanceFromTheGround; // удалённость от земли
 
     public CosmosObject(double distanceFromTheGround) {

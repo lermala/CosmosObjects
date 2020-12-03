@@ -15,10 +15,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import sample.models.Comet;
-import sample.models.CosmosObject;
-import sample.models.Planet;
-import sample.models.Star;
+import sample.models.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -28,21 +25,19 @@ import java.util.ResourceBundle;
 public class MainFormController implements Initializable {
     public TableView mainTable;
 
-    // список с объектами космоса
-    ObservableList<CosmosObject> cosmosObjectsList = FXCollections.observableArrayList();
+    // создали экземпляр класса модели
+    CosmosModel cosmosModel = new CosmosModel();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // заполняем список данными
-        cosmosObjectsList.add(new Planet(100000123, 181818,
-                true,9.11));
-        cosmosObjectsList.add(new Comet(12121212, 200,
-                "Comet1"));
-        cosmosObjectsList.add(new Star(44444444.34, 52,
-                Star.Colour.orange, 555));
+        cosmosModel.addDataChangedListener(objects -> {
+            mainTable.setItems(FXCollections.observableArrayList(objects));
+        });
+
+        cosmosModel.load(); // добавляем вызов метода загрузить данные
 
         // подключили к табл
-        mainTable.setItems(cosmosObjectsList);
+        //mainTable.setItems(cosmosObjectsList);
 
         // создаем столбец, указываем что столбец преобразует CosmosObject в String,
         // указываем заголовок колонки как "Название"
@@ -61,9 +56,7 @@ public class MainFormController implements Initializable {
 
     }
 
-    // добавляем инфу что наш код может выбросить ошибку IOException
     public void onAddClick(ActionEvent actionEvent) throws IOException {
-        // эти три строчки создюат форму из fxml файлика
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("CosmosObjectForm.fxml"));
         Parent root = loader.load();
@@ -71,15 +64,20 @@ public class MainFormController implements Initializable {
         // ну а тут создаем новое окно
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
-        // указываем что оно модальное
         stage.initModality(Modality.WINDOW_MODAL);
         // указываем что оно должно блокировать главное окно
         // ну если точнее, то окно, на котором мы нажали на кнопку
         stage.initOwner(this.mainTable.getScene().getWindow());
 
-        // открываем окно и ждем пока его закроют
+        // сначала берем контроллер
+        CosmosObjectFormController controller = loader.getController();
+        // передаем модель
+        controller.cosmosModel = cosmosModel;
+
+        // показываем форму
         stage.showAndWait();
 
+        /*
         // вытаскиваем контроллер который привязан к форме
         CosmosObjectFormController controller = loader.getController();
         // проверяем что нажали кнопку save
@@ -88,7 +86,7 @@ public class MainFormController implements Initializable {
             CosmosObject newObj = controller.getCosmosObject();
             // добавляем в список
             this.cosmosObjectsList.add(newObj);
-        }
+        }*/
     }
 
     public void onEditClick(ActionEvent actionEvent) throws IOException {
@@ -104,16 +102,17 @@ public class MainFormController implements Initializable {
         // передаем выбранный элемент
         CosmosObjectFormController controller = loader.getController();
         controller.setCosmosObject((CosmosObject) this.mainTable.getSelectionModel().getSelectedItem());
+        controller.cosmosModel = cosmosModel; // передаем модель в контроллер
 
         stage.showAndWait();
 
-        // если нажали кнопку сохранить
+       /* // если нажали кнопку сохранить
         if (controller.getModalResult()) {
             // узнаем индекс выбранной в таблице строки
             int index = this.mainTable.getSelectionModel().getSelectedIndex();
             // подменяем строку в таблице данными на форме
             this.mainTable.getItems().set(index, controller.getCosmosObject());
-        }
+        }*/
     }
 
     public void onDeleteClick(ActionEvent actionEvent) {
@@ -128,8 +127,7 @@ public class MainFormController implements Initializable {
         // если пользователь нажал OK
         Optional<ButtonType> option = alert.showAndWait();
         if (option.get() == ButtonType.OK) {
-            // удаляем строку из таблицы
-            this.mainTable.getItems().remove(object);
+            cosmosModel.delete(object.id); // тут вызываем метод модели, и передаем идентификатор
         }
     }
 }
